@@ -2,7 +2,7 @@
 # License: MIT. See license file in root directory
 # Copyright(c) JetsonHacks (2017-2018)
 
-OPENCV_VERSION=3.4.3
+OPENCV_VERSION=4.1.1
 # Jetson AGX Xavier
 ARCH_BIN=7.2
 # Jetson TX2
@@ -16,6 +16,7 @@ INSTALL_DIR=/usr/local
 # Make sure that you set this to YES
 # Value should be YES or NO
 DOWNLOAD_OPENCV_EXTRAS=NO
+DOWNLOAD_OPENCV_CONTRIB=YES
 # Source code directory
 OPENCV_SOURCE_DIR=$HOME
 WHEREAMI=$PWD
@@ -62,6 +63,9 @@ echo " OpenCV Source will be installed in: $OPENCV_SOURCE_DIR"
 
 if [ $DOWNLOAD_OPENCV_EXTRAS == "YES" ] ; then
  echo "Also installing opencv_extras"
+fi
+if [ $DOWNLOAD_OPENCV_CONTRIB == "YES" ] ; then
+ echo "Also installing opencv_contrib"
 fi
 
 # Repository setup
@@ -126,6 +130,17 @@ if [ $DOWNLOAD_OPENCV_EXTRAS == "YES" ] ; then
  git checkout -b v${OPENCV_VERSION} ${OPENCV_VERSION}
 fi
 
+CMAKE_ARGS_OPENCV_CONTRIB=""
+if [ $DOWNLOAD_OPENCV_CONTRIB == "YES" ] ; then
+ echo "Installing opencv_contrib"
+ # This is for the test data
+ cd $OPENCV_SOURCE_DIR
+ git clone https://github.com/opencv/opencv_contrib.git
+ cd opencv_contrib
+ git checkout -b v${OPENCV_VERSION} ${OPENCV_VERSION}
+ CMAKE_ARGS_OPENCV_CONTRIB="-D OPENCV_EXTRA_MODULES_PATH=$(pwd)/modules"
+fi
+
 cd $OPENCV_SOURCE_DIR/opencv
 mkdir build
 cd build
@@ -158,6 +173,7 @@ time cmake -D CMAKE_BUILD_TYPE=RELEASE \
       -D WITH_OPENGL=ON \
       -D CUDA_NVCC_FLAGS="--expt-relaxed-constexpr" \
       -D WITH_TBB=ON \
+      ${CMAKE_ARGS_OPENCV_CONTRIB} \
       ../
 
 if [ $? -eq 0 ] ; then
